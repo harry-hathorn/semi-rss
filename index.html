@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Signal — Semiconductor & Supply Chain Intelligence</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Playfair+Display:ital,wght@0,700;1,400;1,700&family=Figtree:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0c0e10;
+      --surface: #131618;
+      --surface2: #191c1f;
+      --border: #1f2428;
+      --border2: #282d33;
+      --text: #dde1e7;
+      --text2: #7c8894;
+      --text3: #3d4850;
+      --semi: #00c9b1;
+      --semi-dim: rgba(0,201,177,0.1);
+      --supply: #f0a429;
+      --supply-dim: rgba(240,164,41,0.1);
+      --geo: #e05555;
+      --geo-dim: rgba(224,85,85,0.1);
+      --mono: 'DM Mono', monospace;
+      --serif: 'Playfair Display', serif;
+      --sans: 'Figtree', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 14px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── TOP BAR ── */
+    .topbar {
+      height: 52px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 16px;
+      flex-shrink: 0;
+      background: var(--bg);
+      z-index: 100;
+    }
+
+    .topbar-logo {
+      font-family: var(--serif);
+      font-size: 20px;
+      font-style: italic;
+      color: var(--text);
+      letter-spacing: -0.02em;
+      margin-right: 8px;
+    }
+
+    .topbar-divider { width: 1px; height: 20px; background: var(--border2); }
+
+    .topbar-label {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text3);
+    }
+
+    .topbar-status {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text3);
+    }
+
+    .topbar-status .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--semi);
+      animation: blink 2s ease-in-out infinite;
+    }
+
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* ── CAT TABS ── */
+    .cattabs {
+      height: 40px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: stretch;
+      padding: 0 20px;
+      gap: 0;
+      flex-shrink: 0;
+      background: var(--bg);
+    }
+
+    .cattab {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text3);
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      padding: 0 16px;
+      cursor: pointer;
+      transition: color .2s, border-color .2s;
+    }
+    .cattab:hover { color: var(--text2); }
+    .cattab.active { color: var(--text); }
+    .cattab[data-cat="all"].active { border-bottom-color: var(--text2); }
+    .cattab[data-cat="semiconductor"].active { border-bottom-color: var(--semi); color: var(--semi); }
+    .cattab[data-cat="supply"].active { border-bottom-color: var(--supply); color: var(--supply); }
+    .cattab[data-cat="geopolitical"].active { border-bottom-color: var(--geo); color: var(--geo); }
+
+    .cat-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin-left: 4px;
+      background: var(--border);
+      border-radius: 10px;
+      padding: 1px 6px;
+      font-size: 9px;
+      color: var(--text3);
+    }
+
+    /* ── LAYOUT ── */
+    .workspace {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 260px 380px 1fr;
+      overflow: hidden;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .sidebar-head {
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid var(--border);
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--text3);
+    }
+
+    .feed-list {
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .feed-list::-webkit-scrollbar { width: 3px; }
+    .feed-list::-webkit-scrollbar-track { background: transparent; }
+    .feed-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+    .feed-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      cursor: pointer;
+      border-left: 2px solid transparent;
+      transition: background .15s, border-color .15s;
+      border-bottom: 1px solid transparent;
+    }
+
+    .feed-item:hover { background: var(--surface); }
+
+    .feed-item.active {
+      background: var(--surface);
+      border-left-color: var(--semi);
+    }
+
+    .feed-item.active[data-cat="supply"] { border-left-color: var(--supply); }
+    .feed-item.active[data-cat="geopolitical"] { border-left-color: var(--geo); }
+
+    .feed-item.hidden { display: none; }
+
+    .feed-dot {
+      width: 6px; height: 6px; border-radius: 2px;
+      flex-shrink: 0;
+    }
+    [data-cat="semiconductor"] .feed-dot { background: var(--semi); }
+    [data-cat="supply"] .feed-dot { background: var(--supply); }
+    [data-cat="geopolitical"] .feed-dot { background: var(--geo); }
+
+    .feed-info { flex: 1; min-width: 0; }
+
+    .feed-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.3;
+    }
+
+    .feed-sub {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text3);
+      margin-top: 1px;
+    }
+
+    .feed-badge {
+      font-family: var(--mono);
+      font-size: 8px;
+      padding: 2px 5px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    [data-cat="semiconductor"] .feed-badge { background: var(--semi-dim); color: var(--semi); }
+    [data-cat="supply"] .feed-badge { background: var(--supply-dim); color: var(--supply); }
+    [data-cat="geopolitical"] .feed-badge { background: var(--geo-dim); color: var(--geo); }
+
+    .load-all-btn {
+      margin: 12px;
+      padding: 10px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text2);
+      cursor: pointer;
+      text-align: center;
+      transition: all .15s;
+    }
+
+    .load-all-btn:hover { background: var(--border2); color: var(--text); }
+
+    /* ── ARTICLE LIST ── */
+    .article-list-pane {
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .pane-head {
+      padding: 14px 18px 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .pane-title {
+      font-family: var(--serif);
+      font-size: 16px;
+      font-style: italic;
+      color: var(--text);
+    }
+
+    .pane-count {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text3);
+    }
+
+    .article-list {
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .article-list::-webkit-scrollbar { width: 3px; }
+    .article-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+    .article-item {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background .15s;
+      position: relative;
+    }
+
+    .article-item:hover { background: var(--surface); }
+    .article-item.active { background: var(--surface2); }
+    .article-item.active::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 2px;
+      background: var(--semi);
+    }
+
+    .article-source {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .article-source-dot {
+      display: inline-block;
+      width: 4px; height: 4px; border-radius: 50%;
+    }
+
+    .article-title {
+      font-size: 13.5px;
+      font-weight: 600;
+      line-height: 1.4;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .article-excerpt {
+      font-size: 12px;
+      color: var(--text2);
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .article-date {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text3);
+      margin-top: 8px;
+    }
+
+    /* ── DETAIL PANE ── */
+    .detail-pane {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .detail-head {
+      padding: 14px 28px 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .detail-source-info {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text3);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .open-link {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text2);
+      text-decoration: none;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      padding: 6px 12px;
+      border-radius: 3px;
+      transition: all .15s;
+    }
+
+    .open-link:hover { color: var(--text); border-color: var(--text3); }
+
+    .detail-body {
+      overflow-y: auto;
+      flex: 1;
+      padding: 32px 28px 48px;
+    }
+
+    .detail-body::-webkit-scrollbar { width: 3px; }
+    .detail-body::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+    .detail-kicker {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .detail-title {
+      font-family: var(--serif);
+      font-size: clamp(22px, 2.5vw, 30px);
+      font-weight: 700;
+      line-height: 1.2;
+      letter-spacing: -0.01em;
+      color: var(--text);
+      margin-bottom: 20px;
+    }
+
+    .detail-meta {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 24px;
+    }
+
+    .detail-meta-item {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text3);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .detail-content {
+      font-size: 15px;
+      line-height: 1.75;
+      color: var(--text2);
+      max-width: 640px;
+    }
+
+    .detail-content p { margin-bottom: 1em; }
+
+    .detail-content img {
+      max-width: 100%;
+      border-radius: 4px;
+      margin: 16px 0;
+      opacity: 0.85;
+    }
+
+    .detail-content a { color: var(--semi); text-decoration: none; }
+    .detail-content a:hover { text-decoration: underline; }
+
+    .detail-full-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 24px;
+      padding: 12px 20px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text2);
+      text-decoration: none;
+      transition: all .15s;
+    }
+
+    .detail-full-link:hover { color: var(--text); border-color: var(--text3); }
+
+    /* ── STATES ── */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 12px;
+      padding: 40px;
+      text-align: center;
+    }
+
+    .empty-icon {
+      font-size: 32px;
+      opacity: 0.3;
+    }
+
+    .empty-title {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-style: italic;
+      color: var(--text2);
+    }
+
+    .empty-sub {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text3);
+      max-width: 220px;
+      line-height: 1.6;
+    }
+
+    /* ── LOADING ── */
+    .skeleton {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .skel-line {
+      height: 11px;
+      background: linear-gradient(90deg, var(--border) 25%, var(--border2) 50%, var(--border) 75%);
+      background-size: 200% 100%;
+      border-radius: 3px;
+      animation: shimmer 1.5s infinite;
+      margin-bottom: 8px;
+    }
+
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+    .skel-line.short { width: 40%; height: 9px; }
+    .skel-line.long { width: 90%; }
+    .skel-line.med { width: 70%; }
+    .skel-line.xshort { width: 25%; height: 9px; }
+
+    /* ── ERROR ── */
+    .error-banner {
+      padding: 20px 18px;
+      background: rgba(224,85,85,0.07);
+      border-bottom: 1px solid rgba(224,85,85,0.2);
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--geo);
+      line-height: 1.6;
+    }
+
+    /* ── AGGREGATE header ── */
+    .agg-source-sep {
+      padding: 8px 18px 6px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--text3);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ── SCROLLBAR global ── */
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+    @media (max-width: 900px) {
+      .workspace { grid-template-columns: 220px 1fr; }
+      .detail-pane { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <span class="topbar-logo">Signal</span>
+  <div class="topbar-divider"></div>
+  <span class="topbar-label">Semiconductor &amp; Supply Chain Intelligence</span>
+  <div class="topbar-status">
+    <span class="dot"></span>
+    <span id="status-text">Ready</span>
+  </div>
+</div>
+
+<!-- CATEGORY TABS -->
+<div class="cattabs">
+  <button class="cattab active" data-cat="all" onclick="filterCat('all')">All Feeds <span class="cat-pill">11</span></button>
+  <button class="cattab" data-cat="semiconductor" onclick="filterCat('semiconductor')">Semiconductor <span class="cat-pill">6</span></button>
+  <button class="cattab" data-cat="supply" onclick="filterCat('supply')">Supply Chain <span class="cat-pill">4</span></button>
+  <button class="cattab" data-cat="geopolitical" onclick="filterCat('geopolitical')">Geopolitical <span class="cat-pill">1</span></button>
+</div>
+
+<!-- WORKSPACE -->
+<div class="workspace">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-head">Sources</div>
+    <div class="feed-list" id="feed-list">
+      <!-- populated by JS -->
+    </div>
+    <button class="load-all-btn" onclick="loadAllFeeds()">⚡ Load All Feeds</button>
+  </div>
+
+  <!-- ARTICLE LIST -->
+  <div class="article-list-pane">
+    <div class="pane-head">
+      <span class="pane-title" id="pane-title">Select a feed</span>
+      <span class="pane-count" id="pane-count"></span>
+    </div>
+    <div class="article-list" id="article-list">
+      <div class="empty-state">
+        <div class="empty-icon">📡</div>
+        <div class="empty-title">Choose a source</div>
+        <div class="empty-sub">Select a feed from the left to load its latest articles, or hit "Load All Feeds" for everything at once.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DETAIL PANE -->
+  <div class="detail-pane">
+    <div class="detail-head">
+      <div class="detail-source-info" id="detail-source-info">—</div>
+      <a class="open-link" id="detail-open-link" href="#" target="_blank" rel="noopener">↗ Open Article</a>
+    </div>
+    <div class="detail-body" id="detail-body">
+      <div class="empty-state">
+        <div class="empty-icon">📰</div>
+        <div class="empty-title">Select an article</div>
+        <div class="empty-sub">Click any headline to read the summary here.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const FEEDS = [
+  { id: 'digitimes',  name: 'Digitimes',         cat: 'semiconductor', sub: 'Asia chip coverage',   url: 'https://www.digitimes.com/rss/daily.xml' },
+  { id: 'ieee',       name: 'IEEE Spectrum',      cat: 'semiconductor', sub: 'Research & deep tech', url: 'https://spectrum.ieee.org/feeds/topic/semiconductors.rss' },
+  { id: 'semieng',    name: 'Semi Engineering',   cat: 'semiconductor', sub: 'Chiplets, EDA, HBM',   url: 'https://semiengineering.com/feed' },
+  { id: 'elec',       name: 'The Elec',           cat: 'semiconductor', sub: 'Samsung, SK Hynix',    url: 'https://thelec.net/rss/S1N3.xml' },
+  { id: 'sia',        name: 'SIA',                cat: 'semiconductor', sub: 'Policy & trade data',  url: 'https://www.semiconductors.org/feed' },
+  { id: 'semtoday',   name: 'Semiconductor Today',cat: 'semiconductor', sub: 'Compound semi & RF',   url: 'https://www.semiconductor-today.com/rss.shtml' },
+  { id: 'scdive',     name: 'Supply Chain Dive',  cat: 'supply',        sub: 'Tariffs & logistics',  url: 'https://www.supplychaindive.com/feeds/news/' },
+  { id: 'scbrain',    name: 'SupplyChainBrain',   cat: 'supply',        sub: 'Air, ports, freight',  url: 'https://www.supplychainbrain.com/rss' },
+  { id: 'sc247',      name: 'Supply Chain 247',   cat: 'supply',        sub: 'Disruption & risk',    url: 'https://www.supplychain247.com/rss' },
+  { id: 'logmgmt',    name: 'Logistics Mgmt',     cat: 'supply',        sub: 'Ops & automation',     url: 'https://feeds.feedburner.com/logisticsmgmt/latest' },
+  { id: 'reuters',    name: 'Reuters Technology', cat: 'geopolitical',  sub: 'Breaking wire speed',  url: 'https://feeds.reuters.com/reuters/technologyNews' },
+];
+
+const catColors = { semiconductor: 'var(--semi)', supply: 'var(--supply)', geopolitical: 'var(--geo)' };
+
+let currentFeed = null;
+let currentArticle = null;
+let allArticles = [];
+let activeCat = 'all';
+
+// ── BUILD SIDEBAR ──
+const feedListEl = document.getElementById('feed-list');
+
+FEEDS.forEach(feed => {
+  const item = document.createElement('div');
+  item.className = 'feed-item';
+  item.dataset.id = feed.id;
+  item.dataset.cat = feed.cat;
+  item.innerHTML = `
+    <div class="feed-dot"></div>
+    <div class="feed-info">
+      <div class="feed-name">${feed.name}</div>
+      <div class="feed-sub">${feed.sub}</div>
+    </div>
+    <span class="feed-badge">${feed.cat === 'geopolitical' ? 'geo' : feed.cat.slice(0,5)}</span>
+  `;
+  item.onclick = () => loadFeed(feed);
+  feedListEl.appendChild(item);
+});
+
+// ── FILTER ──
+function filterCat(cat) {
+  activeCat = cat;
+  document.querySelectorAll('.cattab').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
+  document.querySelectorAll('.feed-item').forEach(item => {
+    item.classList.toggle('hidden', cat !== 'all' && item.dataset.cat !== cat);
+  });
+}
+
+// ── CORS PROXY CHAIN — tries each proxy in order until one works ──
+const PROXIES = [
+  url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+  url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+  url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+  url => `https://thingproxy.freeboard.io/fetch/${url}`,
+];
+
+async function fetchWithProxy(url, proxyFn) {
+  const proxyUrl = proxyFn(url);
+  const res = await fetch(proxyUrl, { signal: AbortSignal.timeout(8000) });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const text = await res.text();
+
+  // allorigins wraps in JSON { contents: "..." }
+  let rawXml = text;
+  try {
+    const json = JSON.parse(text);
+    if (json.contents) rawXml = json.contents;
+  } catch (_) { /* not JSON, use raw text */ }
+
+  if (!rawXml || rawXml.length < 50) throw new Error('Empty response');
+  return rawXml;
+}
+
+function parseXml(rawXml) {
+  const parser = new DOMParser();
+  const xml = parser.parseFromString(rawXml, 'text/xml');
+
+  const parseErr = xml.querySelector('parsererror');
+  if (parseErr) throw new Error('XML parse error');
+
+  const isAtom = !!xml.querySelector('feed');
+  const entries = isAtom
+    ? [...xml.querySelectorAll('entry')]
+    : [...xml.querySelectorAll('item')];
+
+  if (!entries.length) throw new Error('No items in feed');
+
+  return entries.map(el => {
+    const get = tag => el.querySelector(tag)?.textContent?.trim() || '';
+    const getAttr = (tag, attr) => el.querySelector(tag)?.getAttribute(attr) || '';
+
+    const link = isAtom
+      ? (getAttr('link[rel="alternate"]', 'href') || getAttr('link', 'href') || get('id'))
+      : (get('link') || get('guid'));
+
+    const description = get('description') || get('summary') || get('content') || '';
+    const content = el.querySelector('content\\:encoded')?.textContent
+      || description;
+
+    return {
+      title: get('title').replace(/<!\[CDATA\[|\]\]>/g, '').trim(),
+      link,
+      pubDate: get('pubDate') || get('published') || get('updated'),
+      author: get('author') || get('name') || get('dc\\:creator') || '',
+      description,
+      content,
+    };
+  });
+}
+
+async function fetchFeed(url, onStatus) {
+  let lastError;
+  for (let i = 0; i < PROXIES.length; i++) {
+    try {
+      if (onStatus) onStatus(`Trying proxy ${i + 1}/${PROXIES.length}…`);
+      const rawXml = await fetchWithProxy(url, PROXIES[i]);
+      const items = parseXml(rawXml);
+      return { items };
+    } catch (e) {
+      lastError = e;
+    }
+  }
+  throw new Error(`All ${PROXIES.length} proxies failed — feed may block scraping. Last: ${lastError.message}`);
+}
+
+function timeAgo(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d)) return '';
+  const diff = (Date.now() - d) / 1000;
+  if (diff < 3600) return `${Math.round(diff/60)}m ago`;
+  if (diff < 86400) return `${Math.round(diff/3600)}h ago`;
+  if (diff < 604800) return `${Math.round(diff/86400)}d ago`;
+  return d.toLocaleDateString('en-GB', { day:'numeric', month:'short' });
+}
+
+function stripHtml(html) {
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  return tmp.textContent || tmp.innerText || '';
+}
+
+function setStatus(msg) {
+  document.getElementById('status-text').textContent = msg;
+}
+
+// ── LOAD SINGLE FEED ──
+async function loadFeed(feed) {
+  currentFeed = feed;
+  currentArticle = null;
+
+  document.querySelectorAll('.feed-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.id === feed.id);
+  });
+
+  document.getElementById('pane-title').textContent = feed.name;
+  document.getElementById('pane-count').textContent = '';
+
+  const listEl = document.getElementById('article-list');
+  listEl.innerHTML = skeletons(8);
+  setStatus(`Loading ${feed.name}…`);
+  clearDetail();
+
+  try {
+    const data = await fetchFeed(feed.url, msg => setStatus(msg));
+    const items = data.items || [];
+    renderArticles(items, feed, listEl);
+    document.getElementById('pane-count').textContent = `${items.length} articles`;
+    setStatus(`${items.length} articles from ${feed.name}`);
+  } catch (e) {
+    listEl.innerHTML = `<div class="error-banner">⚠ Could not load feed: ${e.message}<br><br>Some feeds block external requests. Try another source.</div>`;
+    setStatus('Feed error');
+  }
+}
+
+// ── LOAD ALL FEEDS ──
+async function loadAllFeeds() {
+  document.querySelectorAll('.feed-item').forEach(el => el.classList.remove('active'));
+  currentFeed = null;
+  document.getElementById('pane-title').textContent = 'All Feeds';
+  document.getElementById('pane-count').textContent = '';
+  clearDetail();
+
+  const listEl = document.getElementById('article-list');
+  listEl.innerHTML = skeletons(12);
+  setStatus('Loading all feeds…');
+
+  const visibleFeeds = FEEDS.filter(f => activeCat === 'all' || f.cat === activeCat);
+  let gathered = [];
+  let loaded = 0;
+
+  const results = await Promise.allSettled(visibleFeeds.map(f => fetchFeed(f.url, null).then(d => ({ feed: f, items: d.items || [] }))));
+
+  listEl.innerHTML = '';
+  results.forEach(r => {
+    if (r.status === 'fulfilled') {
+      const { feed, items } = r.value;
+      if (items.length === 0) return;
+      const sep = document.createElement('div');
+      sep.className = 'agg-source-sep';
+      sep.innerHTML = `<span style="color:${catColors[feed.cat]};font-size:7px;">●</span> ${feed.name} <span style="margin-left:auto">${items.length} items</span>`;
+      listEl.appendChild(sep);
+      items.slice(0, 10).forEach(item => {
+        renderSingleArticle(item, feed, listEl);
+        gathered.push({ item, feed });
+      });
+      loaded++;
+    }
+  });
+
+  if (listEl.children.length === 0) {
+    listEl.innerHTML = `<div class="error-banner">⚠ Could not load any feeds. Check your connection.</div>`;
+  }
+
+  document.getElementById('pane-count').textContent = `${loaded}/${visibleFeeds.length} sources`;
+  setStatus(`Loaded ${loaded} of ${visibleFeeds.length} sources`);
+}
+
+// ── RENDER ARTICLES ──
+function renderArticles(items, feed, container) {
+  container.innerHTML = '';
+  if (!items.length) {
+    container.innerHTML = `<div class="error-banner">No articles found in this feed.</div>`;
+    return;
+  }
+  items.forEach(item => renderSingleArticle(item, feed, container));
+}
+
+function renderSingleArticle(item, feed, container) {
+  const el = document.createElement('div');
+  el.className = 'article-item';
+  const excerpt = stripHtml(item.description || item.content || '').slice(0, 140).trim();
+  const color = catColors[feed.cat];
+  el.innerHTML = `
+    <div class="article-source">
+      <span class="article-source-dot" style="background:${color}"></span>
+      ${feed.name}
+      <span style="margin-left:auto">${timeAgo(item.pubDate)}</span>
+    </div>
+    <div class="article-title">${item.title || 'Untitled'}</div>
+    ${excerpt ? `<div class="article-excerpt">${excerpt}…</div>` : ''}
+    <div class="article-date">${item.pubDate ? new Date(item.pubDate).toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short', year:'numeric' }) : ''}</div>
+  `;
+  el.onclick = () => openArticle(item, feed, el);
+  container.appendChild(el);
+}
+
+// ── OPEN ARTICLE DETAIL ──
+function openArticle(item, feed, el) {
+  document.querySelectorAll('.article-item').forEach(e => e.classList.remove('active'));
+  el.classList.add('active');
+  currentArticle = item;
+
+  const link = item.link || item.url || '#';
+  document.getElementById('detail-open-link').href = link;
+
+  const color = catColors[feed.cat];
+  document.getElementById('detail-source-info').innerHTML = `
+    <span style="color:${color};font-size:7px;">●</span>
+    ${feed.name}
+    <span>·</span>
+    ${timeAgo(item.pubDate)}
+  `;
+
+  const body = document.getElementById('detail-body');
+  const content = item.content || item.description || '';
+  const cleanContent = content
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+
+  body.innerHTML = `
+    <div class="detail-kicker">
+      <span style="color:${color}">■</span>
+      ${feed.name} &nbsp;·&nbsp; ${feed.cat.toUpperCase()}
+    </div>
+    <h1 class="detail-title">${item.title || 'Untitled'}</h1>
+    <div class="detail-meta">
+      <div class="detail-meta-item">🕒 ${item.pubDate ? new Date(item.pubDate).toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' }) : 'Unknown date'}</div>
+      ${item.author ? `<div class="detail-meta-item">✍ ${item.author}</div>` : ''}
+    </div>
+    <div class="detail-content">${cleanContent || '<p>No preview available for this article.</p>'}</div>
+    <a class="detail-full-link" href="${link}" target="_blank" rel="noopener">↗ Read full article on ${feed.name}</a>
+  `;
+}
+
+// ── HELPERS ──
+function clearDetail() {
+  document.getElementById('detail-source-info').innerHTML = '—';
+  document.getElementById('detail-open-link').href = '#';
+  document.getElementById('detail-body').innerHTML = `
+    <div class="empty-state">
+      <div class="empty-icon">📰</div>
+      <div class="empty-title">Select an article</div>
+      <div class="empty-sub">Click any headline to read the summary here.</div>
+    </div>`;
+}
+
+function skeletons(n) {
+  return Array.from({length: n}, () => `
+    <div class="skeleton">
+      <div class="skel-line short"></div>
+      <div class="skel-line long" style="margin-top:10px"></div>
+      <div class="skel-line med"></div>
+      <div class="skel-line xshort" style="margin-top:10px"></div>
+    </div>`).join('');
+}
+</script>
+</body>
+</html>

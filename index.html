@@ -583,10 +583,10 @@
 
 <!-- CATEGORY TABS -->
 <div class="cattabs">
-  <button class="cattab active" data-cat="all" onclick="filterCat('all')">All Feeds <span class="cat-pill">11</span></button>
+  <button class="cattab active" data-cat="all" onclick="filterCat('all')">All Feeds <span class="cat-pill">12</span></button>
   <button class="cattab" data-cat="semiconductor" onclick="filterCat('semiconductor')">Semiconductor <span class="cat-pill">6</span></button>
   <button class="cattab" data-cat="supply" onclick="filterCat('supply')">Supply Chain <span class="cat-pill">4</span></button>
-  <button class="cattab" data-cat="geopolitical" onclick="filterCat('geopolitical')">Geopolitical <span class="cat-pill">1</span></button>
+  <button class="cattab" data-cat="geopolitical" onclick="filterCat('geopolitical')">Geopolitical <span class="cat-pill">2</span></button>
 </div>
 
 <!-- WORKSPACE -->
@@ -634,17 +634,21 @@
 
 <script>
 const FEEDS = [
-  { id: 'digitimes',  name: 'Digitimes',         cat: 'semiconductor', sub: 'Asia chip coverage',   url: 'https://www.digitimes.com/rss/daily.xml' },
-  { id: 'ieee',       name: 'IEEE Spectrum',      cat: 'semiconductor', sub: 'Research & deep tech', url: 'https://spectrum.ieee.org/feeds/topic/semiconductors.rss' },
-  { id: 'semieng',    name: 'Semi Engineering',   cat: 'semiconductor', sub: 'Chiplets, EDA, HBM',   url: 'https://semiengineering.com/feed' },
-  { id: 'elec',       name: 'The Elec',           cat: 'semiconductor', sub: 'Samsung, SK Hynix',    url: 'https://thelec.net/rss/S1N3.xml' },
-  { id: 'sia',        name: 'SIA',                cat: 'semiconductor', sub: 'Policy & trade data',  url: 'https://www.semiconductors.org/feed' },
-  { id: 'semtoday',   name: 'Semiconductor Today',cat: 'semiconductor', sub: 'Compound semi & RF',   url: 'https://www.semiconductor-today.com/rss.shtml' },
-  { id: 'scdive',     name: 'Supply Chain Dive',  cat: 'supply',        sub: 'Tariffs & logistics',  url: 'https://www.supplychaindive.com/feeds/news/' },
-  { id: 'scbrain',    name: 'SupplyChainBrain',   cat: 'supply',        sub: 'Air, ports, freight',  url: 'https://www.supplychainbrain.com/rss' },
-  { id: 'sc247',      name: 'Supply Chain 247',   cat: 'supply',        sub: 'Disruption & risk',    url: 'https://www.supplychain247.com/rss' },
-  { id: 'logmgmt',    name: 'Logistics Mgmt',     cat: 'supply',        sub: 'Ops & automation',     url: 'https://feeds.feedburner.com/logisticsmgmt/latest' },
-  { id: 'reuters',    name: 'Reuters Technology', cat: 'geopolitical',  sub: 'Breaking wire speed',  url: 'https://feeds.reuters.com/reuters/technologyNews' },
+  // ── SEMICONDUCTOR ──
+  { id: 'digitimes',  name: 'Digitimes',           cat: 'semiconductor', sub: 'Asia chip coverage',     url: 'https://www.digitimes.com/rss/daily.xml' },
+  { id: 'ieee',       name: 'IEEE Spectrum',        cat: 'semiconductor', sub: 'Research & deep tech',  url: 'https://spectrum.ieee.org/feeds/topic/semiconductors.rss' },
+  { id: 'semieng',    name: 'Semi Engineering',    cat: 'semiconductor', sub: 'Chiplets, EDA, HBM',    url: 'https://semiengineering.com/feed' },
+  { id: 'eetimes',    name: 'EE Times',             cat: 'semiconductor', sub: 'Chip design & industry',url: 'https://www.eetimes.com/feed/' },
+  { id: 'tomshw',     name: 'Toms Hardware',        cat: 'semiconductor', sub: 'CPU, GPU, memory',       url: 'https://www.tomshardware.com/feeds/all' },
+  { id: 'ars',        name: 'Ars Technica',         cat: 'semiconductor', sub: 'Deep-dive chip coverage',url: 'https://feeds.arstechnica.com/arstechnica/index' },
+  // ── SUPPLY CHAIN ──
+  { id: 'scdive',     name: 'Supply Chain Dive',   cat: 'supply',        sub: 'Tariffs & logistics',   url: 'https://www.supplychaindive.com/feeds/news/' },
+  { id: 'logmgmt',    name: 'Logistics Mgmt',      cat: 'supply',        sub: 'Ops & automation',      url: 'https://feeds.feedburner.com/logisticsmgmt/latest' },
+  { id: 'freightwv',  name: 'FreightWaves',         cat: 'supply',        sub: 'Freight & disruption',  url: 'https://www.freightwaves.com/news/feed' },
+  { id: 'mhlnews',    name: 'MHLNews',              cat: 'supply',        sub: 'Manufacturing & handling',url: 'https://www.mhlnews.com/rss' },
+  // ── GEOPOLITICAL ──
+  { id: 'bbctech',    name: 'BBC Technology',      cat: 'geopolitical',  sub: 'Breaking global tech',  url: 'https://feeds.bbci.co.uk/news/technology/rss.xml' },
+  { id: 'hnrss',      name: 'Hacker News',          cat: 'geopolitical',  sub: 'Tech, trade & policy',  url: 'https://hnrss.org/frontpage' },
 ];
 
 const catColors = { semiconductor: 'var(--semi)', supply: 'var(--supply)', geopolitical: 'var(--geo)' };
